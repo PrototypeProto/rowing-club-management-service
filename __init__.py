@@ -6,9 +6,29 @@ from typing import Optional, Union, Annotated
 '''
 from fastapi import FastAPI, Header
 from .code.user_routes import router
+from .code.config import Settings
+from .db.main import init_db
 
-api_version = "v1"
+from contextlib import asynccontextmanager
 
-app = FastAPI(version=api_version)
+@asynccontextmanager
+async def life_span(app: FastAPI):
+    print("Server is starting...")
+    await init_db()
+    
+    yield
+    print("Server has been stopped...")
 
-app.include_router(router=router, prefix=f"/{api_version}/user")
+# api_version = "v1"
+# s = Settings()
+# print(s.DB_URL)
+
+# app = FastAPI(version=api_version)
+app = FastAPI(
+    title="userManager",
+    description="manage users",
+    lifespan=life_span
+)
+
+# app.include_router(router=router, prefix=f"/{api_version}/user")
+app.include_router(router=router, prefix="/user")

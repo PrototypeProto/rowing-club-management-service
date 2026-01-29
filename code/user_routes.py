@@ -36,18 +36,30 @@ users = []
 @router.post("/")
 async def insertUser(user: User):
     users.append(user)
+
+    if (not user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="uhh")
     return users
 
 
 @router.get("/")
-async def bad_access():
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="uhh")
+async def bad_access(user: User):
+
+    if (not user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="uhh")
 
 
 @router.patch("/")
-async def update():
+async def update(user: User):
+    
+    if (not user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="uhh")
+        
     return 2
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
-async def delete():
+async def delete(user: User):
+    if (not user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="uhh")
+
     return 3

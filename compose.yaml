@@ -11,15 +11,16 @@ services:
     build:
       context: /home/kyoko/code/fastAPI-proj/docker/
       dockerfile: Dockerfile
-    image: mariadb:lts-noble
+    image: postgres:18.1
+    shm_size: 1024mb
     restart: always
     working_dir: /docker
     ports:
-      - 3306:3306
+      - 5432:5432
     volumes:
       - /home/kyoko/code/fastAPI-proj/docker/:/docker
     environment:
-      MARIADB_ROOT_PASSWORD: party
+      POSTGRES_PASSWORD: party
     stdin_open: true
     tty: true
   
