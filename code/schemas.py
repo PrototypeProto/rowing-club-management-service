@@ -3,6 +3,11 @@ import uuid
 from datetime import date, datetime
 from sqlmodel import SQLModel
 
+'''
+    What we use to enforce data input
+'''
+
+
 class User(BaseModel):
     uid: uuid.UUID
     username: str
@@ -17,8 +22,6 @@ class UserCreateModel(BaseModel):
     pwd: str
     user_description: str
     is_male: bool
-    date_created: date
-    time_modified: str
 
 
 class UserUpdateModel(BaseModel):
@@ -26,4 +29,3 @@ class UserUpdateModel(BaseModel):
     pwd: str
     user_description: str
     is_male: bool
-    time_modified: str

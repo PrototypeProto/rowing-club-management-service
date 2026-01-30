@@ -12,6 +12,10 @@ async_engine = AsyncEngine(
 ))
 
 async def init_db():
+    '''
+        initializes the database if table DNE
+        TODO: figure out what metadata is for {conn.run_sync(SQLModel.metadata.create_all)}
+    '''
     async with async_engine.begin() as conn:
         from ..code.models import User
 

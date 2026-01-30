@@ -2,6 +2,12 @@ from .models import User
 from sqlmodel.ext.asyncio.session import AsyncSession
 from .schemas import UserCreateModel, UserUpdateModel
 from sqlmodel import select, desc
+from datetime import date, datetime
+
+'''
+    Handles business logic (db access) for the {/users} route
+    enforce proper data insertions 
+'''
 
 class UserService:
     async def get_all_users(self, session:AsyncSession):
@@ -27,15 +33,17 @@ class UserService:
         )
 
         session.add(new_user)
+
         await session.commit()
 
         return new_user
 
     async def update_user(self, user_uid:str, update_data:UserUpdateModel, session:AsyncSession):
-        user_to_update = self.get_user(user_uid, session)
+        user_to_update = await self.get_user(user_uid, session)
 
         if user_to_update is not None:
             update_data_dict = update_data.model_dump()
+            update_data_dict["time_modified"] = datetime.now()
 
             for k, v in update_data_dict.items():
                 setattr(user_to_update, k, v)
@@ -46,13 +54,15 @@ class UserService:
         else:
             return None
 
-    async def delete_user(self, user_uid:str, session:AsyncSession):
-        user_to_delete = self.get_user(user_uid, session)
+    async def delete_user(self, user_uid:str, session:AsyncSession) -> bool:
+        user_to_delete = await self.get_user(user_uid, session)
 
         if user_to_delete is not None:
             await session.delete(user_to_delete)
 
             await session.commit()
 
+            return True
+            
         else: 
-            return None
+            return False

@@ -4,6 +4,11 @@ import uuid
 import sqlalchemy.dialects.postgresql as postgres
 
 class User(SQLModel, table=True):
+    '''
+        How we access data from the database with an object that maps to corresponding parts, 
+            outline constraints and other behavior
+    '''
+
     __tablename__ = "Users"
     
     uid: uuid.UUID = Field(
@@ -14,10 +19,16 @@ class User(SQLModel, table=True):
             default=uuid.uuid4
         )
     )
-    username: str
+    username: str = Field(
+        sa_column = Column(
+            postgres.VARCHAR,
+            nullable=False,
+            unique=True
+        )
+    )
     pwd: str
     user_description: str
-    is_male: bool
+    is_male: bool 
     date_created: date = Field (
         sa_column = Column(
             postgres.DATE, default=date.today
@@ -30,7 +41,7 @@ class User(SQLModel, table=True):
     )
 
     def __repr__(self):
-        return f"<User {self.uid}: user {self.username}>"
+        return f"<User {self.username} + {self.uid}>"
 
 
 # 3:15
