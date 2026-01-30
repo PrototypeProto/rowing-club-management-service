@@ -1,11 +1,34 @@
-from typing import Optional, Union
-from pydantic import BaseModel
-from datetime import date 
+from sqlmodel import SQLModel, Field, Column
+from datetime import date, datetime
+import uuid
+import sqlalchemy.dialects.postgresql as postgres
 
-class User(BaseModel):
-    uid: int
+class Users(SQLModel, table=True):
+    __tablename__ = "Users"
+    
+    uid: uuid.UUID = Field(
+        sa_column = Column(
+            postgres.UUID,
+            nullable=False,
+            primary_key=True,
+            default=uuid.uuid4
+        )
+    )
+    username: str
     pwd: str
+    user_description: str
+    is_male: bool
+    date_created: date = Field (
+        sa_column = Column(
+            postgres.DATE, default=date.today
+        )
+    )
+    time_modified: datetime = Field (
+        sa_column = Column(
+            postgres.TIMESTAMP, default=datetime.now
+        )
+    )
 
-class RegistrationDate(BaseModel):
-    reg_date: date
-    desc: str
+    def __repr__(self):
+        return f"<Users {self.uid}: user {self.username}>"
+

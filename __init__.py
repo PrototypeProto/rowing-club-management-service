@@ -5,7 +5,8 @@ from typing import Optional, Union, Annotated
     Annotated[type, "annotation textr"]
 '''
 from fastapi import FastAPI, Header
-from .code.user_routes import router
+from .code.user_routes import router_at_users
+from .code.root_routes import router_at_root
 from .code.config import Settings
 from .db.main import init_db
 
@@ -31,4 +32,5 @@ app = FastAPI(
 )
 
 # app.include_router(router=router, prefix=f"/{api_version}/user")
-app.include_router(router=router, prefix="/user")
+app.include_router(router=router_at_users, prefix="/users")
+app.include_router(router=router_at_root, prefix="")
