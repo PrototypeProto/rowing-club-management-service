@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 import uuid
 from datetime import date, datetime
+from sqlmodel import SQLModel
 
-class Users(SQLModel, table=True):
+class User(BaseModel):
     uid: uuid.UUID
     username: str
     pwd: str

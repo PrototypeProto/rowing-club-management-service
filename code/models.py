@@ -3,7 +3,7 @@ from datetime import date, datetime
 import uuid
 import sqlalchemy.dialects.postgresql as postgres
 
-class Users(SQLModel, table=True):
+class User(SQLModel, table=True):
     __tablename__ = "Users"
     
     uid: uuid.UUID = Field(
@@ -30,5 +30,7 @@ class Users(SQLModel, table=True):
     )
 
     def __repr__(self):
-        return f"<Users {self.uid}: user {self.username}>"
+        return f"<User {self.uid}: user {self.username}>"
 
+
+# 3:15
