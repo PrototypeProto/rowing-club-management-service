@@ -7,7 +7,7 @@ from typing import Optional, Union, Annotated, List
 from fastapi import FastAPI, Header, APIRouter, Depends
 from fastapi import status
 from fastapi.exceptions import HTTPException
-from .schemas import UserUpdateModel, UserCreateModel, User
+from .schemas import UserUpdateModel, UserCreateModel, User, UserLoginModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 from .service import UserService
 from src.db.main import get_session
@@ -24,23 +24,25 @@ user_service = UserService()
 
 
 
-@router_at_users.post("/", response_model=User)
+@router_at_users.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
 async def create_user(user_data: UserCreateModel, session: AsyncSession = Depends(get_session)) -> dict:
-    if user_data.is_male is not None:
-        if user_data.is_male == "0" or user_data.is_male == 0:
-            user_data.is_male = False
-        else:
-            user_data.is_male = True
-    else:
-        user_data.is_male = False
+    email = user_data.email
 
-    try:
-        new_user = await user_service.create_user(user_data, session)
-    except:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="failed to create user")
+    user_exists = await user_service.get_user_by_email(email, session)
+    
+    if user_exists:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User with email already exists")
 
+    new_user = await user_service.create_user(user_data, session)
     return new_user
 
+@router_at_users.post("/login", status_code=status.HTTP_200_OK)
+async def login_user(user_data: UserLoginModel, session: AsyncSession = Depends(get_session)):
+    result = await user_service.valid_user_login(user_data, session)
+    if not result:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid login attempt")
+
+    
 
 @router_at_users.get("/all", response_model=List[User])
 async def get_all_users(session: AsyncSession = Depends(get_session)):

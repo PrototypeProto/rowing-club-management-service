@@ -27,10 +27,8 @@ class User(SQLModel, table=True):
         )
     )
     email: str
-    pwd: str
-    user_description: str
-    is_male: bool 
-    role: str
+    passwd_hash: str = Field(exclude=True)
+    is_verified: bool = Field(default=False)
     date_created: date = Field (
         sa_column = Column(
             postgres.DATE, default=date.today
