@@ -66,4 +66,3 @@ async def delete_product(product_uid:str, session: AsyncSession = Depends(get_se
 
     if not product_to_delete:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="product not found")
-

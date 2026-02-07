@@ -14,6 +14,8 @@ from .service import UserService
 from src.db.main import get_session
 from .utils import create_access_token, decode_token, verify_passwd
 from datetime import datetime, timedelta
+from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from src.db.redis import add_jti_to_blocklist
 
 REFRESH_TOKEN_EXPIRY = 2
 
@@ -57,8 +59,6 @@ async def login_user(login_data: UserLoginModel, session: AsyncSession = Depends
                     "email": user.email,
                     "uid": str(user.uid),
                 },
-                refresh=True,
-                expiry=timedelta(days=REFRESH_TOKEN_EXPIRY)
             )
 
             refresh_token = create_access_token(
@@ -90,6 +90,38 @@ async def login_user(login_data: UserLoginModel, session: AsyncSession = Depends
 async def get_all_users(session: AsyncSession = Depends(get_session)):
     users = await user_service.get_all_users(session)
     return users
+
+@router_at_users.get("/refresh_token")
+async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
+    expiry_timestamp = token_details['exp']
+
+    # print(expiry_timestamp)
+
+    if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
+        new_access_token = create_access_token(
+            user_data=token_details['user']
+        )
+
+        return JSONResponse(content={
+            "access_token": new_access_token
+        })
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid/Expired token"
+    )
+
+@router_at_users.get("/logout")
+async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
+    jti = token_details['jti']
+
+    await add_jti_to_blocklist(jti)
+
+    return JSONResponse(
+        content={
+            "message": "Logged out successfully"
+        },
+        status_code=status.HTTP_200_OK
+    )
 
 # @router_at_users.get("/{user_uid}", response_model=User)
 # async def get_user(user_uid: str, session: AsyncSession = Depends(get_session)) -> dict:

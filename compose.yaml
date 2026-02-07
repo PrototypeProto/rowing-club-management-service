@@ -24,3 +24,16 @@ services:
     stdin_open: true
     tty: true
   
+  redis-db:
+    container_name: redis-db
+    build:
+      context: /home/kyoko/code/fastAPI-proj/redis/
+    image: redis:latest
+    restart: always
+    working_dir: /redis
+    ports:
+      - 6379:6379
+    volumes: 
+      - /home/kyoko/code/fastAPI-proj/redis/:/redis
+    stdin_open: true
+    tty: true
