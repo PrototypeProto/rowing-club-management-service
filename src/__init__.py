@@ -16,6 +16,9 @@ from contextlib import asynccontextmanager
 @asynccontextmanager
 async def life_span(app: FastAPI):
     print("Server is starting...")
+    
+    # If we want to autogenerate the DB based on our SQLModels
+    # Using Alembic instead to manage DB updates
     await init_db()
     
     yield
@@ -29,7 +32,7 @@ async def life_span(app: FastAPI):
 app = FastAPI(
     title="userManager",
     description="manage users",
-    lifespan=life_span
+    # lifespan=life_span
 )
 
 # app.include_router(router=router, prefix=f"/{api_version}/user")

@@ -1,4 +1,4 @@
-from .models import User
+from src.db.models import User
 from sqlmodel.ext.asyncio.session import AsyncSession
 from .schemas import UserCreateModel, UserUpdateModel, UserLoginModel
 from sqlmodel import select, desc
@@ -34,6 +34,7 @@ class UserService:
         )
 
         new_user.passwd_hash = generate_passwd_hash(user_data_dict['passwd'])
+        new_user.role = "inactive"
 
         session.add(new_user)
 

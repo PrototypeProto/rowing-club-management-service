@@ -13,6 +13,7 @@ class User(BaseModel):
     username: str
     email: str
     passwd_hash: str = Field(exclude=True)
+    role: str
     is_verified: bool = False
     date_created: date
     time_modified: datetime

@@ -4,14 +4,6 @@ import uuid
 from datetime import date, datetime
 from enum import Enum
 
-# Prevent the addition of extra fields
-class StrictModel(BaseModel):
-    model_config = {
-        "extra": "forbid"
-    }
-
-
-
 class MemberRole(str, Enum):
     '''
         May deprecate ADMIN role in favor of president+VP role, TBD
@@ -32,30 +24,29 @@ class Semester(str, Enum):
 
 
 
-
-class Coxwain():
+class Coxwain(StrictModel):
     '''
         Marks members that are coxwains
     '''
     uid: uuid.UUID
 
-class CoxwainEvaluation():
+class CoxwainEvaluation(StrictModel):
     '''
         Anonymous feedback on a coxwain's abilities and suggestions from rowers
     '''
     uid: uuid.UUID
-    semester: Semester
+    semester: str
     year: int = Field(ge=1900)
     feedback: str
 
-class Rower():
+class Rower(StrictModel):
     '''
         A member that rows
     '''
     uid: uuid.UUID
 
 
-class MembershipRolePermissions(StrictModel):
+class RolePermissions(StrictModel):
     '''
         Restricts certain APIs based on these permissions
     '''
@@ -68,7 +59,7 @@ class MembershipRolePermissions(StrictModel):
     view_funds: bool
     view_roster: bool
 
-class MembershipRolePermissionsUpdateModel(StrictModel):
+class RolePermissionsUpdateModel(StrictModel):
     '''
         Flips bool value in database where bool is true
     '''
@@ -106,7 +97,7 @@ class MemberStatus(StrictModel):
         
     '''
     uid: uuid.UUID
-    role: MembershipRole = MembershipRole.INACTIVE
+    role: str
 
 class MemberEnrollment(StrictModel):
     '''
@@ -114,7 +105,7 @@ class MemberEnrollment(StrictModel):
     '''
     uid: uuid.UUID
     year: int = Field(ge=1900)
-    semester: Semester
-    role: MemberRole = MemberRole.MEMBER
+    semester: str
+    role: str
     are_dues_paid: bool
 

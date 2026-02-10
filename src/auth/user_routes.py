@@ -14,7 +14,7 @@ from .service import UserService
 from src.db.main import get_session
 from .utils import create_access_token, decode_token, verify_passwd
 from datetime import datetime, timedelta
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from src.db.redis import add_jti_to_blocklist
 
 REFRESH_TOKEN_EXPIRY = 2
@@ -28,7 +28,7 @@ REFRESH_TOKEN_EXPIRY = 2
 
 router_at_users = APIRouter()
 user_service = UserService()
-
+role_checker = Depends(RoleChecker(['member']))
 
 
 @router_at_users.post("/signup", response_model=User, status_code=status.HTTP_201_CREATED)
@@ -58,6 +58,7 @@ async def login_user(login_data: UserLoginModel, session: AsyncSession = Depends
                 user_data={
                     "email": user.email,
                     "uid": str(user.uid),
+                    "role": user.role,
                 },
             )
 
@@ -110,7 +111,12 @@ async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer(
         status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid/Expired token"
     )
 
-@router_at_users.get("/logout")
+@router_at_users.get('/me', dependencies=[role_checker])
+async def get_current_user(user = Depends(get_current_user)):
+    return user
+
+
+@router_at_users.get("/logout", dependencies=[role_checker])
 async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
     jti = token_details['jti']
 
