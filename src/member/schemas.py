@@ -47,9 +47,12 @@ class CoxwainEvaluation(StrictModel):
 class CoxwainEvaluationResponseModel(StrictModel):
     evaluation_id: uuid.UUID
     cox_id: uuid.UUID
-    semester: str
+    semester: Semester
     year: int
     feedback: str
+
+class CoxwainEvaluationSpecificModel(StrictModel):
+    evaluation_id: uuid.UUID
 
 class CoxwainEvaluationSearchModel(StrictModel):
     '''

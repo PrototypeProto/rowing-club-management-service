@@ -31,10 +31,11 @@ REFRESH_TOKEN_EXPIRY_DAYS = 2
 member_router = APIRouter(dependencies=[access_token_bearer])
 user_service = UserService()
 member_service = MemberService()
+SessionDependency = Annotated[AsyncSession, Depends(get_session)]
 
 
 @member_router.post("/add_coxain", response_model=Coxwain, dependencies=[officer_rolechecker], status_code=status.HTTP_201_CREATED)
-async def add_coxain(cox: Coxwain, session: AsyncSession = Depends(get_session)):
+async def add_coxain(cox: Coxwain, session: SessionDependency):
     user_exists = await user_service.get_user_by_uuid(cox.cox_id, session)
     
     if user_exists is None:
@@ -44,7 +45,7 @@ async def add_coxain(cox: Coxwain, session: AsyncSession = Depends(get_session))
     return new_user
 
 @member_router.post("/submit_coxwain_evaluation", response_model=CoxwainEvaluationResponseModel, dependencies=[public_rolechecker])
-async def evaluate_coxwain( cox_eval: CoxwainEvaluation, session: AsyncSession = Depends(get_session)) -> dict:
+async def evaluate_coxwain( cox_eval: CoxwainEvaluation, session: SessionDependency) -> dict:
     # TODO: log who sent feedback
     coxwain_eval = await member_service.create_coxwain_evaluation(cox_eval, session)
 
@@ -54,14 +55,41 @@ async def evaluate_coxwain( cox_eval: CoxwainEvaluation, session: AsyncSession =
     return coxwain_eval
 
 @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
-async def raise_privilege(token: dict = access_token_bearer, session: AsyncSession = Depends(get_session)):
+async def raise_privilege(session: SessionDependency, token: dict = access_token_bearer):
     details = token["user"]["uid"]
 
     result = await member_service.raise_p(details, {"role":"admin"}, session)
-    if result == 0:
+    if result:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="failed..."
         )
+
+# TODO: fix returning OK when not deleting the eval
+@member_router.delete("/remove_coxwain_evaluation", dependencies=[officer_rolechecker], status_code=status.HTTP_204_NO_CONTENT)
+async def del_coxwain_evaluation(cox_eval: CoxwainEvaluationSpecificModel, session: SessionDependency):
+    if not await member_service.remove_coxwain_evaluation(cox_eval, session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Unable to remove selected coxwain evaluation"
+        )
+
+@member_router.put("/get_coxwain_evaluations", response_model=list[CoxwainEvaluation])
+async def get_cox_evals(session: SessionDependency, eval_search_params: CoxwainEvaluationSearchModel):
+    result = await member_service.search_coxwain_evaluations(eval_search_params, session)
+    return result
+
+# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+
+# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+
+# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+
+# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+
+# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+
+# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+
+
 
 
 # @member_router.post("/login", status_code=status.HTTP_200_OK)

@@ -28,21 +28,21 @@ class MemberService:
 
         return new_eval
 
-    async def get_coxwain_evaluation(self, cox_eval_id: UUID, session: AsyncSession) -> bool:
-        query = select(CoxwainEvaluation).where(CoxwainEvaluation.evaluation_id == cox_eval_id)
+    async def get_coxwain_evaluation(self, cox_eval: sc.CoxwainEvaluationSpecificModel, session: AsyncSession):
+        query = select(CoxwainEvaluation).where(CoxwainEvaluation.evaluation_id == cox_eval.evaluation_id)
 
-        result = session.exec(query)
-        val = result.first()
+        result = await session.exec(query)
+        return result.first()
 
-        return val if val is not None else None
+    async def remove_coxwain_evaluation(self, cox_eval: sc.CoxwainEvaluationSpecificModel, session: AsyncSession) -> bool:
+        cox_evaluation = await self.get_coxwain_evaluation(cox_eval, session)
 
-    async def remove_coxwain_evaluation(self, cox_eval_id: UUID, session: AsyncSession) -> bool:
-        cox_eval = self.get_coxwain_evaluation(cox_eval_id, session)
-
-        if (cox_eval is None):
+        if (cox_evaluation is None):
             return False
 
-        session.delete(cox_eval)
+        print(cox_evaluation)
+
+        await session.delete(cox_evaluation)
         await session.commit()
         return True
 
@@ -53,14 +53,14 @@ class MemberService:
             column = getattr(CoxwainEvaluation, field_name)
             query = query.where(column == value)
         
-        result = await session.execute(query)
+        result = await session.exec(query)
 
         return result.all()
 
     async def rower_exists(self, rower: sc.Rower, session: AsyncSession) -> bool:
         query = select(Rower).where(Rower.rower_id == rower.rower_id)
 
-        result = await session.execute(query)
+        result = await session.exec(query)
         
         return result.first() is not None
 
@@ -80,7 +80,7 @@ class MemberService:
     async def get_role_permissions(self, role: str, session: AsyncSession) -> dict:
         query = select(RolePermissions).where(RolePermissions.role == role)
 
-        result = await session.execute(query)
+        result = await session.exec(query)
         return result.first()
 
     async def update_role_permissions(self, roles: sc.RolePermissionsUpdateModel, session: AsyncSession) -> bool:
@@ -96,9 +96,9 @@ class MemberService:
         
         statement = update(RolePermissions).where(RolePermissions.role == roles.role).values(role_permission)
 
-        result = await session.execute(statement)
+        result = await session.exec(statement)
 
-        return result is not None
+        return result.rowcount > 0
 
     async def check_member_status(self, member: sc.MemberEnrollmentCreateModel, session: AsyncSession):
         query = select(MemberEnrollmentHistory)
@@ -107,7 +107,7 @@ class MemberService:
             column = getattr(MemberEnrollmentHistory, field_name)
             query = query.where(column == value)
         
-        result = await session.execute(query)
+        result = await session.exec(query)
 
         return result.first()
 
@@ -126,7 +126,7 @@ class MemberService:
 
     async def raise_p(self, user_id: UUID, model: sc.UserPrivilegeUpdateModel, session: AsyncSession):
         statement = update(User).where(User.uid == user_id).values(model)
-        result = await session.execute(statement)
+        result = await session.exec(statement)
         await session.commit()
 
-        return result.rowcount
+        return result.rowcount > 0

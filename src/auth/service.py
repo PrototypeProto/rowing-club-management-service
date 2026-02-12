@@ -24,9 +24,7 @@ class UserService:
 
         result = await session.exec(statement)
 
-        user = result.first()
-
-        return user if user is not None else None
+        return result.first()
 
     async def user_exists_uid(self, uid: uuid.UUID, session: AsyncSession) -> bool:
         user = await self.get_user_by_uuid(uid, session)
@@ -38,9 +36,7 @@ class UserService:
 
         result = await session.exec(statement)
 
-        user = result.first()
-
-        return user if user is not None else None
+        return result.first()
 
     async def create_user(self, user_data:UserCreateModel, session:AsyncSession) -> User:
         user_data_dict = user_data.model_dump()
