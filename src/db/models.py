@@ -190,7 +190,7 @@ class MemberEnrollmentHistory(SQLModel, table=True):
     member_id: uuid.UUID = Field(foreign_key="User.uid", primary_key=True)
     year: int = Field(ge=1900, primary_key=True)
     semester: str = Field(foreign_key="Semester.semester", primary_key=True)
-    role: str = Field(foreign_key="MemberRole.role")
+    role: str = Field(foreign_key="MemberRole.role", default="inactive")
     dues_paid: bool = False
 
 

@@ -51,6 +51,29 @@ def upgrade() -> None:
         ]
     )
 
+    role_permissions_table = sa.table(
+        "RolePermissions",
+        sa.column("role", sa.String),
+        sa.column("access_site", sa.Boolean),
+        sa.column("create_announcements", sa.Boolean),
+        sa.column("manage_dates", sa.Boolean),
+        sa.column("manage_members", sa.Boolean),
+        sa.column("manage_roles", sa.Boolean),
+        sa.column("view_funds", sa.Boolean),
+        sa.column("view_roster", sa.Boolean),
+    )
+
+    op.bulk_insert(
+        role_permissions_table,
+        [
+            {"role":"admin", "access_site":True,"create_announcements":True,"manage_dates":True,"manage_members":True,"manage_roles":True,"view_funds":True,"view_roster":True},
+            {"role":"coach", "access_site":True,"create_announcements":True,"manage_dates":True,"manage_members":False,"manage_roles":False,"view_funds":True,"view_roster":True},
+            {"role":"officer", "access_site":True,"create_announcements":True,"manage_dates":True,"manage_members":True,"manage_roles":True,"view_funds":True,"view_roster":True},
+            {"role":"member", "access_site":True,"create_announcements":False,"manage_dates":False,"manage_members":False,"manage_roles":False,"view_funds":False,"view_roster":True},
+            {"role":"inactive", "access_site":False,"create_announcements":False,"manage_dates":False,"manage_members":False,"manage_roles":False,"view_funds":False,"view_roster":True},
+        ]
+    )
+
 
 
 
@@ -58,4 +81,8 @@ def downgrade() -> None:
     """Downgrade schema."""
     op.execute(
         'TRUNCATE TABLE "MemberRole" CASCADE;'
+    )
+
+    op.execute(
+        'TRUNCATE TABLE "RolePermissions";'
     )

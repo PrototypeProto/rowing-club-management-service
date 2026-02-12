@@ -4,9 +4,9 @@ import src.member.schemas as sc
 from sqlmodel import select, desc, delete, update
 from datetime import date, datetime
 from uuid import UUID
-# from pydantic import BaseModel
+from src.auth.service import UserService
 
-
+user_service = UserService()
 
 class MemberService:
 
@@ -65,7 +65,7 @@ class MemberService:
         return result.first() is not None
 
     async def create_rower(self, rower: sc.Rower, session: AsyncSession):
-        if not self.rower_exists(rower, session):
+        if self.rower_exists(rower, session):
             return None
 
         new_rower = Rower(
@@ -83,20 +83,32 @@ class MemberService:
         result = await session.exec(query)
         return result.first()
 
-    async def update_role_permissions(self, roles: sc.RolePermissionsUpdateModel, session: AsyncSession) -> bool:
+    async def update_role_permissions(self, role: sc.RolePermissionsRequestUpdateModel, session: AsyncSession) -> bool:
         try:
-            sc.MemberRole(roles.role)
-        except ValueError:
+            sc.MemberRole(role.role)
+        except Exception:
             return False
 
-        role_permission = await self.get_role_permissions(roles.role, session)
+        role_permission = await self.get_role_permissions(role.role, session)
 
         if role_permission is None:
             return False
-        
-        statement = update(RolePermissions).where(RolePermissions.role == roles.role).values(role_permission)
+
+        # Get only the Columns which are marked to be bool-flipped
+        toggle_fields = role.model_dump(
+            exclude={"role"},
+            exclude_unset=True
+        )
+
+        # Create dict
+        update_values = {
+            field: ~getattr(RolePermissions, field) for field, value in toggle_fields.items() if value is True
+        }
+
+        statement = update(RolePermissions).where(RolePermissions.role == role.role).values(**update_values)
 
         result = await session.exec(statement)
+        await session.commit()
 
         return result.rowcount > 0
 
@@ -111,8 +123,12 @@ class MemberService:
 
         return result.first()
 
-    async def enroll_member(self, add_member: sc.MemberEnrollmentCreateModel, session: AsyncSession):
-        if await self.check_member_status(add_member, session) is None:
+    async def enroll_member(self, add_member: sc.MemberEnrollmentCreateModel, session: AsyncSession) -> bool:
+        user = await user_service.get_user_by_uuid(add_member.member_id, session)
+        if user is None:
+            return False
+        
+        if await self.check_member_status(add_member, session) is not None:
             return False
 
         new_member_enrollment = MemberEnrollmentHistory(

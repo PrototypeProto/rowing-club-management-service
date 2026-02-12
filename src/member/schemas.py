@@ -81,7 +81,7 @@ class RolePermissions(StrictModel):
     view_funds: bool
     view_roster: bool
 
-class RolePermissionsUpdateModel(StrictModel):
+class RolePermissionsRequestUpdateModel(StrictModel):
     '''
         Flips bool value in database where bool is true
     '''
@@ -94,7 +94,7 @@ class RolePermissionsUpdateModel(StrictModel):
     view_funds: bool = False
     view_roster: bool = False
 
-    @model_validator(mode="after")
+    @model_validator(mode="before")
     def require_one(self):
         permissions = [
             self.access_site,
@@ -111,6 +111,19 @@ class RolePermissionsUpdateModel(StrictModel):
 
         return self
 
+class RolePermissionsUpdateModel(StrictModel):
+    '''
+        Flips bool value in database where bool is true
+    '''
+    access_site: bool = False
+    create_announcements: bool = False
+    manage_dates: bool = False
+    manage_members: bool = False
+    manage_roles: bool = False
+    view_funds: bool = False
+    view_roster: bool = False
+
+
 class MemberEnrollment(StrictModel):
     '''
         Tracks membership status on a per-semester basis
@@ -125,9 +138,11 @@ class MemberEnrollmentCreateModel(StrictModel):
     '''
         Tracks membership status on a per-semester basis
     '''
+    role: MemberRole
     member_id: uuid.UUID
     year: int = Field(ge=1900)
-    semester: str
+    semester: Semester
+
 
 class UserPrivilegeUpdateModel(StrictModel):
     role: str

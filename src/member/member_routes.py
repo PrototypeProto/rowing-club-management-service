@@ -64,7 +64,6 @@ async def raise_privilege(session: SessionDependency, token: dict = access_token
             status_code=status.HTTP_403_FORBIDDEN, detail="failed..."
         )
 
-# TODO: fix returning OK when not deleting the eval
 @member_router.delete("/remove_coxwain_evaluation", dependencies=[officer_rolechecker], status_code=status.HTTP_204_NO_CONTENT)
 async def del_coxwain_evaluation(cox_eval: CoxwainEvaluationSpecificModel, session: SessionDependency):
     if not await member_service.remove_coxwain_evaluation(cox_eval, session):
@@ -72,16 +71,36 @@ async def del_coxwain_evaluation(cox_eval: CoxwainEvaluationSpecificModel, sessi
             status_code=status.HTTP_403_FORBIDDEN, detail="Unable to remove selected coxwain evaluation"
         )
 
-@member_router.put("/get_coxwain_evaluations", response_model=list[CoxwainEvaluation])
+@member_router.get("/get_coxwain_evaluations", response_model=list[CoxwainEvaluation])
 async def get_cox_evals(session: SessionDependency, eval_search_params: CoxwainEvaluationSearchModel):
     result = await member_service.search_coxwain_evaluations(eval_search_params, session)
     return result
 
-# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+# NOTE: New code from here, 
 
-# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+@member_router.post("/add_rower", status_code=status.HTTP_201_CREATED, response_model=Rower)
+async def add_rower(session: SessionDependency, rower_data: Rower) -> Rower:
+    rower = await member_service.create_rower(rower_data, session)
+    if rower is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Failed to create rower / User already exists"
+        )
+    return rower
 
-# @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
+@member_router.patch("/update_role_permissions")
+async def update_role_perms(session: SessionDependency, role_data: RolePermissionsRequestUpdateModel) -> None:
+    if not await member_service.update_role_permissions(role_data, session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid paramas / No changes made"
+        )
+    
+
+@member_router.post("/enroll_member", status_code=status.HTTP_201_CREATED)
+async def enroll_member(member_data: MemberEnrollmentCreateModel, session: SessionDependency):
+    if not await member_service.enroll_member(member_data, session):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid paramas / No changes made"
+        )
 
 # @member_router.put("/raise_privilege", status_code=status.HTTP_202_ACCEPTED)
 
