@@ -4,3 +4,8 @@ redis/
 *.pyc
 .env
 __pycache__/
+
+
+# tmp Files
+alembic_tmp.py
+old_db.py
