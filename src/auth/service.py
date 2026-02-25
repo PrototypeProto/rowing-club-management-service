@@ -6,74 +6,88 @@ from datetime import date, datetime
 from .utils import generate_passwd_hash, verify_passwd
 from uuid import UUID
 
-'''
+"""
     Handles business logic (db access) for the {/users} route
     enforce proper data insertions 
-'''
+"""
+
 
 class UserService:
+    """
+    Service to access data related to user-data
+    """
 
-    async def user_exists(self, email: str, session: AsyncSession) -> bool:
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+    # Existence Validation - Log in / Sign up
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+    async def username_exists(self, username: str, session: AsyncSession) -> bool:
+        user = await self.get_user_by_username(username, session)
+        return user is not None
+
+    async def get_user_by_username(self, username: str, session: AsyncSession) -> dict:
+        statement = select(User).where(User.username == username)
+        result = await session.exec(statement)
+        return result.first()
+
+    async def email_exists(self, email: str, session: AsyncSession) -> bool:
         user = await self.get_user_by_email(email, session)
-
         return user is not None
 
-
-    async def get_user_by_email(self, email:str, session:AsyncSession) -> dict:
+    async def get_user_by_email(self, email: str, session: AsyncSession) -> dict:
         statement = select(User).where(User.email == email)
-
         result = await session.exec(statement)
-
         return result.first()
 
-    async def user_exists_uid(self, uid: uuid.UUID, session: AsyncSession) -> bool:
-        user = await self.get_user_by_uuid(uid, session)
-
+    async def uid_exists(self, uid: UUID, session: AsyncSession) -> bool:
+        user = await self.get_user_by_uid(uid, session)
         return user is not None
 
-    async def get_user_by_uuid(self, uid: uuid.UUID, session:AsyncSession) -> dict:
+    async def get_user_by_uid(self, uid: UUID, session: AsyncSession) -> dict:
         statement = select(User).where(User.uid == uid)
-
         result = await session.exec(statement)
-
         return result.first()
-
-    async def create_user(self, user_data:UserCreateModel, session:AsyncSession) -> User:
+    
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+    # Creation
+    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+    async def create_user(
+        self, user_data: UserCreateModel, session: AsyncSession
+    ) -> User:
         user_data_dict = user_data.model_dump()
-        
-        new_user = User(
-            **user_data_dict
-        )
+        new_user = User(**user_data_dict)
 
-        new_user.passwd_hash = generate_passwd_hash(user_data_dict['passwd'])
         new_user.role = "inactive"
+        new_user.passwd_hash = generate_passwd_hash(user_data.passwd)
 
         session.add(new_user)
-
         await session.commit()
-
         return new_user
-        
-    async def valid_user_login(self, user_login_details: UserLoginModel, session: AsyncSession) -> bool:
-        if not self.user_exists(user_login_details.email, session):
+
+    async def valid_user_login(
+        self, user_login_details: UserLoginModel, session: AsyncSession
+    ) -> bool:
+        if not self.username_exists(user_login_details.username, session):
             return False
 
-        statement = select(User.passwd_hash).where(User.email == user_login_details.email)
+        statement = select(User.passwd_hash).where(
+            User.username == user_login_details.username
+        )
         result = await session.exec(statement)
         hashed_password = result.first()
 
-        if hashed_password is None:
-            return false
+        # Unnecessary?
+        # if hashed_password is None:
+        #     return false
 
         return verify_passwd(user_login_details.passwd, hashed_password)
 
-    async def get_all_users(self, session:AsyncSession):
-        statement = select(User).order_by(desc(User.date_created))
+    async def get_all_users(self, session: AsyncSession):
+        statement = select(User).order_by(desc(User.join_date))
 
         result = await session.exec(statement)
         return result.all()
 
-
+    # TODO: Create update user password method
     # async def update_user(self, user_uid:str, update_data:UserUpdateModel, session:AsyncSession):
     #     user_to_update = await self.get_user_by_email(user_uid, session)
 
@@ -99,6 +113,6 @@ class UserService:
     #         await session.commit()
 
     #         return True
-            
-    #     else: 
+
+    #     else:
     #         return False
