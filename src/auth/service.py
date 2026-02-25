@@ -5,6 +5,7 @@ from sqlmodel import select, desc
 from datetime import date, datetime
 from .utils import generate_passwd_hash, verify_passwd
 from uuid import UUID
+from src.db.db_enum_models import MemberRoleEnum
 
 """
     Handles business logic (db access) for the {/users} route
@@ -56,13 +57,16 @@ class UserService:
         user_data_dict = user_data.model_dump()
         new_user = User(**user_data_dict)
 
-        new_user.role = "inactive"
+        new_user.role = MemberRoleEnum.UNREGISTERED
         new_user.passwd_hash = generate_passwd_hash(user_data.passwd)
+        new_user.join_date = date.today()
+        new_user.is_verified = False
 
         session.add(new_user)
         await session.commit()
         return new_user
 
+    # TODO: implement the login logic in the user_routes.py
     async def valid_user_login(
         self, user_login_details: UserLoginModel, session: AsyncSession
     ) -> bool:
