@@ -25,7 +25,7 @@ class User(StrictModel):
     join_date: date
 
 class UserCreateModel(StrictModel):
-    username: str = Field(max_length=12)
+    username: str = Field(min_length=8, max_length=8)
     email: str = Field(max_length=32)
     passwd: str = Field(min_length=6)
     first_name: str = Field(min_length=2)
