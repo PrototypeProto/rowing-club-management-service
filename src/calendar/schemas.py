@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, Union
-import uuid uuid.UUID
+from uuid import UUID
 from datetime import date, datetime, time
 from enum import Enum
 
@@ -11,7 +11,7 @@ class StrictModel(BaseModel):
 
 
 
-class AttendanceTypes(str, Enum):
+class AttendanceType(str, Enum):
     '''
         NOTE: maybe remove the enums and make to normal data struct
         "Present" is omitted intentionally to reduce noise
@@ -65,7 +65,7 @@ class Attendance(StrictModel):
     '''
         By default, omit the "present" type a
     '''
-    uid: uuid.UUID
+    uid: UUID
     date: date
     presence_status: AttendanceType
 
@@ -86,7 +86,7 @@ class ScheduledAttendance(StrictModel):
         true = present that day
         NOTE: can use a bitmap first 7 bits are mon-sun
     '''
-    uid: uuid.UUID
+    uid: UUID
     mon: bool = False
     tue: bool = False
     wed: bool = False
